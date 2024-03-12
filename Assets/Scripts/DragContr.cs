@@ -1,16 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using Unity.Burst.CompilerServices;
 using UnityEditor;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class DragContr : MonoBehaviour
 {
+    private GameObject activeUpArrow;
+    private GameObject activeDownArrow;
+
     public int dragIdOrder;
 
-    private GameObject dragObject;
+    public string dragObjectType;
+    public DragPreview dragObject;
 
     public bool isDragging = false;
 
@@ -44,10 +51,17 @@ public class DragContr : MonoBehaviour
         dragPreviewRect = _dragPreview.GetComponent<RectTransform>();
 
         DragPreview dragPreviewIn = _dragPreview.GetComponent<DragPreview>();
+        float floatValue;
+        float.TryParse(_panelData.panelDuration.text, out floatValue);
 
         dragPreviewIn.id = _panelData.id;
+        dragPreviewIn.id_order = _panelData.id_order;
         dragPreviewIn.name = _panelData.panelName.text;
-        dragPreviewIn.duration = _panelData.panelDuration.text;
+        dragPreviewIn.duration = floatValue;
+        dragPreviewIn.panel= _panelData.gameObject;
+
+        dragObjectType = _panelData.type;
+        dragObject = dragPreviewIn;
     }
 
     public void StopDragging()
@@ -62,7 +76,7 @@ public class DragContr : MonoBehaviour
 
     private void AddElement()
     {
-        if (CheckIntersectionWithScrollView())
+        if (CheckView())
         {
             DragPreview dragPreviewOut = _dragPreview.GetComponent<DragPreview>();
             FormData newItem = new()
@@ -76,6 +90,18 @@ public class DragContr : MonoBehaviour
             LeftDynamicContentScript.Instance.AddTask(newItem);
 
         }
+
+    }
+
+    private void ChangeOrder()
+    {
+        int index = dragObject.panel.transform.GetSiblingIndex();
+        
+        
+
+        LeftDynamicContentScript.Instance.UpdateOrder(index, dragIdOrder);
+
+        dragObject.panel.transform.SetSiblingIndex(dragIdOrder);
     }
 
     public void UpdateDragPreviewPosition(PointerEventData eventData)
@@ -90,35 +116,48 @@ public class DragContr : MonoBehaviour
         CheckPlaneView();
     }
 
-    private bool CheckIntersectionWithScrollView()
+    private bool CheckView()
     {
         if (_dragPreview != null)
         {
-            // Получаем прямоугольник Scroll View
-            RectTransform scrollRectTransform = scrollView1.content;
+            // Получаем позицию мыши в мировых координатах
+            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-            // Получаем прямоугольники элемента Scroll View и целевого элемента
-            Rect scrollRectRect = scrollRectTransform.rect;
-            Rect targetRect = dragPreviewRect.rect;
+            // Определяем луч из позиции мыши в направлении (0, 0, -1)
+            RaycastHit2D[] hits = Physics2D.RaycastAll(mousePosition, Vector2.zero);
 
-            // Получаем позиции элемента Scroll View и целевого элемента
-            Vector2 scrollRectPosition = scrollRectTransform.anchoredPosition;
-            Vector2 targetPosition = dragPreviewRect.anchoredPosition;
-
-            // Проверяем, виден ли целевой элемент внутри Scroll View
-
-            bool isVisible =
-                scrollRectPosition.x + scrollRectRect.width / 100 > targetPosition.x &&
-                scrollRectPosition.x - scrollRectRect.width / 1.3 < targetPosition.x + targetRect.width &&
-                scrollRectPosition.y + scrollRectRect.height / 2 > targetPosition.y &&
-                scrollRectPosition.y - scrollRectRect.height / 2 < targetPosition.y + targetRect.height;
-
-            // Делаем что-то, если элемент виден
-            if (isVisible)
+            foreach (RaycastHit2D view in hits)
             {
-                return true;
-            }
+                if (view.collider != null && view.collider.gameObject.name == "Viewport")
+                {
+                    foreach (RaycastHit2D hit in hits)
+                    {
+                        if (hit.collider != null && hit.collider.gameObject.name == "Panel(Clone)")
+                        {
+                            Vector2 localPosition;
+                            RectTransform rectTransform = hit.collider.GetComponent<RectTransform>();
+                            //DragPreview dragPreview = hit.collider.GetComponent<DragPreview>();
+                            //PanelData panelData = hit.collider.GetComponent<PanelData>();
+                            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, mousePosition, null, out localPosition);
+                            if (dragObject != null && dragObjectType == "left")
+                            {
+                                ChangeOrder();
+                                return false;
+                            }
+                            else
+                            {
+                                return true;
+                            }
+                        }
+                        else if (dragObject != null && dragObjectType == "")
+                        {
+                            return true;
+                        }
 
+                    }
+                }
+
+            }
         }
         return false;
     }
@@ -132,47 +171,47 @@ public class DragContr : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
 
         // Проверяем, попал ли луч в какой-то объект
-        if (hit.collider != null)
+        if (hit.collider != null && hit.collider.gameObject.name== "Panel(Clone)")
         {
             
             Vector2 localPosition;
             RectTransform rectTransform = hit.collider.GetComponent<RectTransform>();
-            DragAndDrop dragAndDrop = hit.collider.GetComponent<DragAndDrop>();
             PanelData panelData = hit.collider.GetComponent<PanelData>();
+            DragAndDrop dragAndDrop = hit.collider.GetComponent<DragAndDrop>();
             RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, mousePosition, null, out localPosition);
-            //GameObject upArrow= dragAndDrop.downArrow.gameObject;
-            //GameObject downArrow= dragAndDrop.upArrow.gameObject;
 
 
             bool isCursorOnTopHalf = localPosition.y > 0f;
+            int index = panelData.transform.GetSiblingIndex();
 
             if (isCursorOnTopHalf)
             {
-                dragIdOrder = panelData.id_order - 1;
+                if (index > 0)
+                {
+                    dragIdOrder = index - 1;
+                }
+                
             }
             else 
             {
-                dragIdOrder = panelData.id_order + 1;
+                dragIdOrder = index + 1;
             }
 
-            SwitchArrows(dragAndDrop.upArrow.gameObject, dragAndDrop.downArrow.gameObject, isCursorOnTopHalf);
+            activeUpArrow = dragAndDrop.upArrow.gameObject;
+            activeDownArrow = dragAndDrop.downArrow.gameObject;
 
-            //Invoke(nameof(DelayDel), 1f);
-
-            //if (dragObject== hit.collider.gameObject)
-            //{
-
-            //}
-            //else 
-            //{
-
-            //}
+            SwitchArrows(isCursorOnTopHalf);
+        }
+        else
+        {
+            activeUpArrow.SetActive(false);
+            activeDownArrow.SetActive(false);
         }
     }
 
-    private void SwitchArrows(GameObject arrow1, GameObject arrow2, bool state)
+    private void SwitchArrows(bool state)
     {
-        arrow1.SetActive(state);
-        arrow2.SetActive(!state);
+        activeUpArrow.SetActive(state);
+        activeDownArrow.SetActive(!state);
     }
 }

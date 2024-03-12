@@ -14,5 +14,7 @@ public class DragPreview : MonoBehaviour
 
     public new string name;
 
-    public string duration;
+    public float duration;
+
+    public GameObject panel;
 }

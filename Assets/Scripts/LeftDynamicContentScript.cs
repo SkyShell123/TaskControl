@@ -35,7 +35,38 @@ public class LeftDynamicContentScript : MonoBehaviour
 
     public void DeliteTask(int _id)
     {
-        itemsLeft.RemoveAt(_id);
+        FormData formData = new();
+        foreach (FormData item in itemsLeft)
+        {
+            if (item.id== _id)
+            {
+                formData= item;
+                
+            }
+        }
+        itemsLeft.Remove(formData);
+        UpdateData();
+
+    }
+
+    public void UpdateOrder(int indexToMove, int newIndex)
+    {
+        if (true/*indexToMove >= 0 && indexToMove < itemsLeft.Count && newIndex >= 0 && newIndex < itemsLeft.Count*/)
+        {
+            FormData itemToMove = itemsLeft[indexToMove];
+            itemsLeft.RemoveAt(indexToMove);
+
+            if (newIndex > indexToMove)
+            {
+                newIndex--; // Коррекция индекса, если новая позиция находится после удаленного элемента
+            }
+
+            itemsLeft.Insert(newIndex, itemToMove);
+            Debug.Log(indexToMove + "  " + newIndex);
+
+            // Теперь элемент переместился на новую позицию
+        }
+
         UpdateData();
     }
 
@@ -60,10 +91,10 @@ public class LeftDynamicContentScript : MonoBehaviour
         itemsLeft.Add(_items);
         UpdateData();
 
-        Transform contentTransform = GetComponentInChildren<GridLayoutGroup>().transform;
+        Transform contentTransform = GetComponentInChildren<VerticalLayoutGroup>().transform;
 
         GameObject newItem = Instantiate(itemPrefab, contentTransform);
-        newItem.GetComponent<PanelData>().LoadData(_items.id, _items.name, _items.duration, "left");
+        newItem.GetComponent<PanelData>().LoadData(_items.id, _items.id_order, _items.name, _items.duration, "left");
     }
 
     public void LoadData()
@@ -92,14 +123,14 @@ public class LeftDynamicContentScript : MonoBehaviour
         panels.Clear();
 
         // Получаем ссылку на контент
-        Transform contentTransform = GetComponentInChildren<GridLayoutGroup>().transform;
+        Transform contentTransform = GetComponentInChildren<VerticalLayoutGroup>().transform;
 
         // Создаем нужное количество элементов
         for (int i = 0; i < itemsLeft.Count; i++)
         {
             // Создаем экземпляр элемента из префаба
             GameObject newItem = Instantiate(itemPrefab, contentTransform);
-            newItem.GetComponent<PanelData>().LoadData(itemsLeft[i].id, itemsLeft[i].name, itemsLeft[i].duration, "left");
+            newItem.GetComponent<PanelData>().LoadData(itemsLeft[i].id, itemsLeft[i].id_order, itemsLeft[i].name, itemsLeft[i].duration, "left");
             panels.Add(newItem);
         }
     }

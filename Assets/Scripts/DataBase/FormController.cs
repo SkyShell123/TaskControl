@@ -15,6 +15,8 @@ public class FormController : MonoBehaviour
 
     public void SaveData()
     {
+        float.TryParse(inputField2.text, out float floatValue);
+
         if (DynamicContentScript.Instance.items.Count>0)
         {
             _id = DynamicContentScript.Instance.items.Last().id++;
@@ -28,7 +30,8 @@ public class FormController : MonoBehaviour
         {
             id = _id,
             name = inputField1.text,
-            duration = inputField2.text,
+
+            duration = floatValue,
         };
 
         DynamicContentScript.Instance.AddTask(newItem);

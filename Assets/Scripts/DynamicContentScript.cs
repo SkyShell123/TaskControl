@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.IO;
 using System.Collections.Generic;
 using static UnityEditor.Progress;
+using UnityEngine.UIElements;
 
 [System.Serializable]
 public class FormDataList
@@ -34,7 +35,16 @@ public class DynamicContentScript : MonoBehaviour
 
     public void DeliteTask(int _id) 
     {
-        items.RemoveAt(_id);
+        FormData formData = new();
+        foreach (FormData item in items)
+        {
+            if (item.id == _id)
+            {
+                formData = item;
+
+            }
+        }
+        items.Remove(formData);
         UpdateData();
     }
 
@@ -44,6 +54,8 @@ public class DynamicContentScript : MonoBehaviour
         //{
         //    items[i].id = i;
         //}
+
+        
 
         FormDataList formDataList = new()
         {
@@ -62,7 +74,7 @@ public class DynamicContentScript : MonoBehaviour
         Transform contentTransform = GetComponentInChildren<GridLayoutGroup>().transform;
 
         GameObject newItem = Instantiate(itemPrefab, contentTransform);
-        newItem.GetComponent<PanelData>().LoadData(_items.id, _items.name, _items.duration,"");
+        newItem.GetComponent<PanelData>().LoadData(_items.id, _items.id_order, _items.name, _items.duration,"");
     }
 
     public void LoadData()
@@ -92,14 +104,14 @@ public class DynamicContentScript : MonoBehaviour
 
 
         // Получаем ссылку на контент
-        Transform contentTransform = GetComponentInChildren<GridLayoutGroup>().transform;
+        Transform contentTransform = GetComponentInChildren<VerticalLayoutGroup>().transform;
 
         // Создаем нужное количество элементов
         for (int i = 0; i < items.Count; i++)
         {
             // Создаем экземпляр элемента из префаба
             GameObject newItem = Instantiate(itemPrefab, contentTransform);
-            newItem.GetComponent<PanelData>().LoadData(items[i].id, items[i].name, items[i].duration, "");
+            newItem.GetComponent<PanelData>().LoadData(items[i].id, items[i].id_order, items[i].name, items[i].duration, "");
             panels.Add(newItem);
         }
     }

@@ -9,17 +9,21 @@ public class PanelData : MonoBehaviour
     public TextMeshProUGUI panelName;
     public TextMeshProUGUI panelDuration;
 
+    public TextMeshProUGUI BTime;
+    public TextMeshProUGUI ETime;
+
     public int id;
 
     public int id_order;
 
     public string type="";
 
-    public void LoadData(int _id, string _name, string _duration, string _type)
+    public void LoadData(int _id, int _idOrder, string _name, float _duration, string _type)
     {
         id = _id;
+        id_order = _idOrder;
         panelName.text = _name;
-        panelDuration.text = _duration;
+        panelDuration.text = _duration.ToString();
         type=_type;
     }
 
