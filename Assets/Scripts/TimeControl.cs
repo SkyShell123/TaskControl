@@ -4,32 +4,42 @@ using UnityEngine;
 
 public class TimeControl : MonoBehaviour
 {
-    private Time bTime;
-    private Time eTime;
+    private readonly int bTime=8;
+    private readonly int eTime=23;
+
+    public int currentTime;
+
+    public static TimeControl Instance;
     // Start is called before the first frame update
-    
-    public List<FormData> tasks;
+
+    public List<GameObject> tasks;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
-        tasks=LeftDynamicContentScript.Instance.itemsLeft;
-        // —ортировка задач по времени начала
-        tasks.Sort((a, b) => a.startTime.CompareTo(b.startTime));
+        
+        UpdateTime();
+    }
 
-        // »нициализаци€ времени начала и конца дл€ каждой задачи, исход€ из пор€дка
-        float currentTime = 0f;
+    public void UpdateTime()
+    {
+        currentTime = bTime * 60;
 
-        foreach (FormData task in tasks)
+        tasks = LeftDynamicContentScript.Instance.panels;
+
+        foreach (GameObject task in tasks)
         {
-            task.startTime = currentTime;
-            task.endTime = currentTime + task.duration / (24 * 60); // ѕреобразование минут в доли дн€
-            currentTime = task.endTime;
-        }
+            PanelData panelData = task.GetComponent<PanelData>();
 
-        // ѕример вывода времени начала и окончани€ задач в консоль
-        foreach (FormData task in tasks)
-        {
-            Debug.Log($"Task: {task.name}, Start: {task.startTime}, End: {task.endTime}");
+            panelData.BTime.text = $"{currentTime/60}.{currentTime % 60}";
+
+            currentTime += int.Parse(panelData.panelDuration.text);
+
+            panelData.ETime.text = $"{currentTime / 60}.{currentTime % 60}";
         }
     }
 }

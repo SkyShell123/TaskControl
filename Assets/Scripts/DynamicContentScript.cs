@@ -71,7 +71,7 @@ public class DynamicContentScript : MonoBehaviour
         items.Add(_items);
         UpdateData();
 
-        Transform contentTransform = GetComponentInChildren<GridLayoutGroup>().transform;
+        Transform contentTransform = GetComponentInChildren<VerticalLayoutGroup>().transform;
 
         GameObject newItem = Instantiate(itemPrefab, contentTransform);
         newItem.GetComponent<PanelData>().LoadData(_items.id, _items.id_order, _items.name, _items.duration,"");

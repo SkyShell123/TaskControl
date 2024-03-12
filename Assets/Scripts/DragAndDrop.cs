@@ -8,6 +8,39 @@ public class DragAndDrop : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public Image upArrow;
     public Image downArrow;
 
+    private BoxCollider2D boxCollider; // Используем BoxCollider2D, предполагая, что коллайдер является прямоугольным
+
+    private void Start()
+    {
+        // Получаем компонент BoxCollider2D
+        boxCollider = GetComponent<BoxCollider2D>();
+
+        // Проверяем, есть ли коллайдер
+        if (boxCollider == null)
+        {
+            Debug.LogError("Коллайдер не найден на объекте: " + gameObject.name);
+            return;
+        }
+
+        // Вызываем метод для первоначальной установки размеров коллайдера
+        UpdateColliderSize();
+    }
+
+    private void Update()
+    {
+        // Периодически вызываем метод для обновления размеров коллайдера
+        UpdateColliderSize();
+    }
+
+    private void UpdateColliderSize()
+    {
+        // Получаем текущие размеры RectTransform элемента интерфейса
+        Vector2 size = GetComponent<RectTransform>().sizeDelta;
+
+        // Обновляем размеры коллайдера
+        boxCollider.size = size;
+    }
+
     private bool IsDragStarted() 
     {
         return DragContr.instance.isDragging; 

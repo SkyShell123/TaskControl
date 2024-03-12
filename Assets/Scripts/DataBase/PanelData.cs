@@ -36,7 +36,7 @@ public class PanelData : MonoBehaviour
         }
         else if (type == "left") 
         {
-            LeftDynamicContentScript.Instance.DeliteTask(id);
+            LeftDynamicContentScript.Instance.DeliteTask(id, gameObject);
             Destroy(gameObject);
         }
     }

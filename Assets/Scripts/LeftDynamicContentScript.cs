@@ -20,7 +20,7 @@ public class LeftDynamicContentScript : MonoBehaviour
 
     public static LeftDynamicContentScript Instance;
 
-    private List<GameObject> panels = new();
+    public List<GameObject> panels = new();
 
     private void Awake()
     {
@@ -33,7 +33,7 @@ public class LeftDynamicContentScript : MonoBehaviour
         PopulateScrollView();
     }
 
-    public void DeliteTask(int _id)
+    public void DeliteTask(int _id, GameObject panel)
     {
         FormData formData = new();
         foreach (FormData item in itemsLeft)
@@ -45,8 +45,9 @@ public class LeftDynamicContentScript : MonoBehaviour
             }
         }
         itemsLeft.Remove(formData);
+        panels.Remove(panel);
         UpdateData();
-
+        
     }
 
     public void UpdateOrder(int indexToMove, int newIndex)
@@ -66,7 +67,7 @@ public class LeftDynamicContentScript : MonoBehaviour
 
             // Теперь элемент переместился на новую позицию
         }
-
+        PopulateScrollView();
         UpdateData();
     }
 
@@ -84,17 +85,22 @@ public class LeftDynamicContentScript : MonoBehaviour
 
         string json = JsonUtility.ToJson(formDataList);
         File.WriteAllText("playerDataLeft.json", json);
+        TimeControl.Instance.UpdateTime();
     }
 
     public void AddTask(FormData _items)
     {
         itemsLeft.Add(_items);
-        UpdateData();
+        
+        
 
         Transform contentTransform = GetComponentInChildren<VerticalLayoutGroup>().transform;
 
         GameObject newItem = Instantiate(itemPrefab, contentTransform);
         newItem.GetComponent<PanelData>().LoadData(_items.id, _items.id_order, _items.name, _items.duration, "left");
+        panels.Add(newItem);
+
+        UpdateData();
     }
 
     public void LoadData()
